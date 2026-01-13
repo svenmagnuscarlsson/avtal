@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wasa Larm - Digitalt Tjänsteavtal</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@300;400;500;600&display=swap');
+        
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8edf2 100%);
+            min-height: 100vh;
+        }
+        
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            letter-spacing: -0.02em;
+        }
+        
+        .signature-canvas {
+            border: 2px dashed #cbd5e1;
+            background: white;
+            border-radius: 12px;
+            touch-action: none;
+            cursor: crosshair;
+            transition: all 0.3s ease;
+        }
+        
+        .signature-canvas:hover {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        .checkbox-card {
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        
+        .checkbox-card.selected {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            border-color: #0284c7;
+        }
+        
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .step-indicator.active {
+            background: #0ea5e9;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .step-indicator.completed {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-indicator.inactive {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+        
+        .input-field {
+            transition: all 0.2s ease;
+        }
+        
+        .input-field:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-in {
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(14, 165, 233, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        const TjansteavtalApp = () => {
+            const [currentStep, setCurrentStep] = useState(0);
+            const [formData, setFormData] = useState({
+                // Kundinformation
+                objektsnummer: '222590-1',
+                kundnamn: '',
+                kundnr: '222590',
+                objektnamn: '',
+                orgnr: '',
+                objektadress: '',
+                postnummer: '',
+                postort: '',
+                fakturaadress: '',
+                telefon: '',
+                kontaktperson: '',
+                telefonKontakt: '',
+                email: '',
+                
+                // Avtal
+                avtalsstart: '',
+                avtalsperiod: '24',
+                betalningsvillkor: 'kvartalsvis',
+                
+                // Tjänster
+                inbrottslarm: false,
+                grundservice: false,
+                larmformedling: false,
+                friaVaktarutryckningar: false,
+                larmsandare: false,
+                utokadGaranti36: false,
+                hyresavtal: false,
+                
+                cctv: false,
+                cctvGrundservice: false,
+                mobildata: false,
+                cctvGaranti: false,
+                
+                firePreventionKomplett: false,
+                brandlarm: false,
+                
+                // Underskrifter
+                saljarSignatur: null,
+                kundSignatur: null,
+                saljarNamn: '',
+                kundNamn: '',
+                saljarDatum: '',
+                kundDatum: ''
+            });
+
+            const saljarCanvasRef = useRef(null);
+            const kundCanvasRef = useRef(null);
+            const [isSaljarDrawing, setIsSaljarDrawing] = useState(false);
+            const [isKundDrawing, setIsKundDrawing] = useState(false);
+
+            // Auto-save to localStorage
+            useEffect(() => {
+                const saved = localStorage.getItem('tjansteavtal-draft');
+                if (saved) {
+                    setFormData(JSON.parse(saved));
+                }
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('tjansteavtal-draft', JSON.stringify(formData));
+            }, [formData]);
+
+            const updateField = (field, value) => {
+                setFormData(prev => ({ ...prev, [field]: value }));
+            };
+
+            const steps = [
+                { title: 'Kundinformation', icon: '👤' },
+                { title: 'Avtalsinformation', icon: '📋' },
+                { title: 'Tjänster', icon: '🛡️' },
+                { title: 'Underskrifter', icon: '✍️' },
+                { title: 'Granska', icon: '✓' }
+            ];
+
+            // Signature functions
+            const startDrawing = (e, canvas, setDrawing) => {
+                setDrawing(true);
+                const ctx = canvas.getContext('2d');
+                ctx.beginPath();
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                ctx.moveTo(x, y);
+            };
+
+            const draw = (e, canvas, isDrawing) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const ctx = canvas.getContext('2d');
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            };
+
+            const stopDrawing = (canvas, field, setDrawing) => {
+                setDrawing(false);
+                updateField(field, canvas.toDataURL());
+            };
+
+            const clearSignature = (canvas, field) => {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                updateField(field, null);
+            };
+
+            const renderKundinformation = () => (
+                <div className="animate-in space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Kundnamn *</label>
+                            <input
+                                type="text"
+                                value={formData.kundnamn}
+                                onChange={(e) => updateField('kundnamn', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="T.ex. Gårdstensbostäder AB"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Organisationsnummer *</label>
+                            <input
+                                type="text"
+                                value={formData.orgnr}
+                                onChange={(e) => updateField('orgnr', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="XXXXXX-XXXX"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Objektnamn *</label>
+                            <input
+                                type="text"
+                                value={formData.objektnamn}
+                                onChange={(e) => updateField('objektnamn', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="Objektets namn"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Telefon *</label>
+                            <input
+                                type="tel"
+                                value={formData.telefon}
+                                onChange={(e) => updateField('telefon', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="031-XXX XX XX"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Objektadress *</label>
+                        <input
+                            type="text"
+                            value={formData.objektadress}
+                            onChange={(e) => updateField('objektadress', e.target.value)}
+                            className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            placeholder="Gatuadress"
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Postnummer</label>
+                            <input
+                                type="text"
+                                value={formData.postnummer}
+                                onChange={(e) => updateField('postnummer', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="XXX XX"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Postort</label>
+                            <input
+                                type="text"
+                                value={formData.postort}
+                                onChange={(e) => updateField('postort', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="T.ex. Göteborg"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Kontaktperson</label>
+                        <input
+                            type="text"
+                            value={formData.kontaktperson}
+                            onChange={(e) => updateField('kontaktperson', e.target.value)}
+                            className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            placeholder="Namn på kontaktperson"
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Telefon kontaktperson</label>
+                            <input
+                                type="tel"
+                                value={formData.telefonKontakt}
+                                onChange={(e) => updateField('telefonKontakt', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="07X-XXX XX XX"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">E-postadress</label>
+                            <input
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => updateField('email', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="exempel@företag.se"
+                            />
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderAvtalsinformation = () => (
+                <div className="animate-in space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Avtalsstart *</label>
+                            <input
+                                type="date"
+                                value={formData.avtalsstart}
+                                onChange={(e) => updateField('avtalsstart', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Avtalsperiod (månader) *</label>
+                            <select
+                                value={formData.avtalsperiod}
+                                onChange={(e) => updateField('avtalsperiod', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            >
+                                <option value="12">12 månader</option>
+                                <option value="24">24 månader</option>
+                                <option value="36">36 månader</option>
+                                <option value="48">48 månader</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Betalningsvillkor *</label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {['kvartalsvis', 'halvårsvis', 'årsvis'].map(option => (
+                                <button
+                                    key={option}
+                                    type="button"
+                                    onClick={() => updateField('betalningsvillkor', option)}
+                                    className={`checkbox-card px-6 py-4 border-2 rounded-lg font-medium ${
+                                        formData.betalningsvillkor === option 
+                                            ? 'selected' 
+                                            : 'border-gray-300 bg-white hover:border-sky-400'
+                                    }`}
+                                >
+                                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+                        <p className="text-sm text-sky-900">
+                            <strong>Viktigt:</strong> Om inte avtalet sägs upp tre (3) månader innan avtalstidens utgång förlängs avtalstiden med tolv (12) månader.
+                        </p>
+                    </div>
+                </div>
+            );
+
+            const ServiceCard = ({ title, checked, onChange, children }) => (
+                <div
+                    onClick={() => onChange(!checked)}
+                    className={`checkbox-card cursor-pointer p-5 border-2 rounded-xl ${
+                        checked 
+                            ? 'selected' 
+                            : 'border-gray-200 bg-white hover:border-sky-300'
+                    }`}
+                >
+                    <div className="flex items-start">
+                        <div className={`w-6 h-6 rounded-md mr-4 flex-shrink-0 flex items-center justify-center border-2 ${
+                            checked 
+                                ? 'bg-white border-white' 
+                                : 'border-gray-300 bg-white'
+                        }`}>
+                            {checked && <span className="text-sky-500 font-bold">✓</span>}
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="font-semibold text-lg mb-2">{title}</h4>
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderTjanster = () => (
+                <div className="animate-in space-y-6">
+                    <div>
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Inbrottslarm & Övervakning</h3>
+                        <div className="space-y-3">
+                            <ServiceCard 
+                                title="Inbrottslarm/Överfallslarm/Driftslarm"
+                                checked={formData.inbrottslarm}
+                                onChange={(val) => updateField('inbrottslarm', val)}
+                            >
+                                <p className="text-sm opacity-90">Grundläggande larmfunktionalitet</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Grundservice enligt kontrollpunkter"
+                                checked={formData.grundservice}
+                                onChange={(val) => updateField('grundservice', val)}
+                            >
+                                <p className="text-sm opacity-90">Regelbunden service och underhåll</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Larmförmedling till certifierad larmcentral"
+                                checked={formData.larmformedling}
+                                onChange={(val) => updateField('larmformedling', val)}
+                            >
+                                <p className="text-sm opacity-90">Förmedling till max 3 kontaktpersoner, nyckelförvaring och utryckningsberedskap</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Fria väktarutryckningar"
+                                checked={formData.friaVaktarutryckningar}
+                                onChange={(val) => updateField('friaVaktarutryckningar', val)}
+                            >
+                                <p className="text-sm opacity-90">Se särskilda avtalsvillkor</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Abonnemang för larmsändare"
+                                checked={formData.larmsandare}
+                                onChange={(val) => updateField('larmsandare', val)}
+                            >
+                                <p className="text-sm opacity-90">Med övervakad kommunikation</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Utökad garanti 36 månader"
+                                checked={formData.utokadGaranti36}
+                                onChange={(val) => updateField('utokadGaranti36', val)}
+                            >
+                                <p className="text-sm opacity-90">Vid nyinstallation</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Hyresavtal"
+                                checked={formData.hyresavtal}
+                                onChange={(val) => updateField('hyresavtal', val)}
+                            >
+                                <p className="text-sm opacity-90">Larmequipment ingår i hyra</p>
+                            </ServiceCard>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800">CCTV - Videoövervakning</h3>
+                        <div className="space-y-3">
+                            <ServiceCard 
+                                title="CCTV System"
+                                checked={formData.cctv}
+                                onChange={(val) => updateField('cctv', val)}
+                            >
+                                <p className="text-sm opacity-90">Kamerasystem för videoövervakning</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Grundservice för CCTV"
+                                checked={formData.cctvGrundservice}
+                                onChange={(val) => updateField('cctvGrundservice', val)}
+                            >
+                                <p className="text-sm opacity-90">Regelbunden service enligt kontrollpunkter</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Abonnemang mobildata 3G/4G"
+                                checked={formData.mobildata}
+                                onChange={(val) => updateField('mobildata', val)}
+                            >
+                                <p className="text-sm opacity-90">För fjärrövervakning via mobilt nätverk</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Utökad garanti CCTV"
+                                checked={formData.cctvGaranti}
+                                onChange={(val) => updateField('cctvGaranti', val)}
+                            >
+                                <p className="text-sm opacity-90">36 månaders garanti vid nyinstallation</p>
+                            </ServiceCard>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Brandskydd</h3>
+                        <div className="space-y-3">
+                            <ServiceCard 
+                                title="Fire Prevention Komplett"
+                                checked={formData.firePreventionKomplett}
+                                onChange={(val) => updateField('firePreventionKomplett', val)}
+                            >
+                                <p className="text-sm opacity-90">Omfattande brandskyddslösning</p>
+                            </ServiceCard>
+                            
+                            <ServiceCard 
+                                title="Brandlarm"
+                                checked={formData.brandlarm}
+                                onChange={(val) => updateField('brandlarm', val)}
+                            >
+                                <p className="text-sm opacity-90">Brandlarm enligt SBF110</p>
+                            </ServiceCard>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderUnderskrifter = () => (
+                <div className="animate-in space-y-8">
+                    {/* Säljare */}
+                    <div className="bg-white p-6 rounded-xl border-2 border-gray-200">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Säljare (Wasa Larm AB)</h3>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Namn *</label>
+                            <input
+                                type="text"
+                                value={formData.saljarNamn}
+                                onChange={(e) => updateField('saljarNamn', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="Fyll i ditt namn"
+                            />
+                        </div>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Datum *</label>
+                            <input
+                                type="date"
+                                value={formData.saljarDatum}
+                                onChange={(e) => updateField('saljarDatum', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Signatur * <span className="text-gray-500 text-xs">(Rita med finger/penna)</span>
+                            </label>
+                            <canvas
+                                ref={saljarCanvasRef}
+                                width={600}
+                                height={200}
+                                className="signature-canvas w-full"
+                                onMouseDown={(e) => startDrawing(e, saljarCanvasRef.current, setIsSaljarDrawing)}
+                                onMouseMove={(e) => draw(e, saljarCanvasRef.current, isSaljarDrawing)}
+                                onMouseUp={() => stopDrawing(saljarCanvasRef.current, 'saljarSignatur', setIsSaljarDrawing)}
+                                onMouseLeave={() => stopDrawing(saljarCanvasRef.current, 'saljarSignatur', setIsSaljarDrawing)}
+                                onTouchStart={(e) => startDrawing(e, saljarCanvasRef.current, setIsSaljarDrawing)}
+                                onTouchMove={(e) => draw(e, saljarCanvasRef.current, isSaljarDrawing)}
+                                onTouchEnd={() => stopDrawing(saljarCanvasRef.current, 'saljarSignatur', setIsSaljarDrawing)}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => clearSignature(saljarCanvasRef.current, 'saljarSignatur')}
+                                className="mt-2 text-sm text-sky-600 hover:text-sky-700 font-medium"
+                            >
+                                Rensa signatur
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* Kund */}
+                    <div className="bg-white p-6 rounded-xl border-2 border-gray-200">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Kund</h3>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Namn *</label>
+                            <input
+                                type="text"
+                                value={formData.kundNamn}
+                                onChange={(e) => updateField('kundNamn', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                placeholder="Kundens namn"
+                            />
+                        </div>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Datum *</label>
+                            <input
+                                type="date"
+                                value={formData.kundDatum}
+                                onChange={(e) => updateField('kundDatum', e.target.value)}
+                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Signatur * <span className="text-gray-500 text-xs">(Rita med finger/penna)</span>
+                            </label>
+                            <canvas
+                                ref={kundCanvasRef}
+                                width={600}
+                                height={200}
+                                className="signature-canvas w-full"
+                                onMouseDown={(e) => startDrawing(e, kundCanvasRef.current, setIsKundDrawing)}
+                                onMouseMove={(e) => draw(e, kundCanvasRef.current, isKundDrawing)}
+                                onMouseUp={() => stopDrawing(kundCanvasRef.current, 'kundSignatur', setIsKundDrawing)}
+                                onMouseLeave={() => stopDrawing(kundCanvasRef.current, 'kundSignatur', setIsKundDrawing)}
+                                onTouchStart={(e) => startDrawing(e, kundCanvasRef.current, setIsKundDrawing)}
+                                onTouchMove={(e) => draw(e, kundCanvasRef.current, isKundDrawing)}
+                                onTouchEnd={() => stopDrawing(kundCanvasRef.current, 'kundSignatur', setIsKundDrawing)}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => clearSignature(kundCanvasRef.current, 'kundSignatur')}
+                                className="mt-2 text-sm text-sky-600 hover:text-sky-700 font-medium"
+                            >
+                                Rensa signatur
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <p className="text-sm text-amber-900">
+                            <strong>OBS:</strong> Genom att signera accepterar ni Wasa Larms Allmänna bestämmelser samt Särskilda bestämmelser för köp, installation och service av tekniskt säkerhetssystem.
+                        </p>
+                    </div>
+                </div>
+            );
+
+            const renderGranska = () => {
+                const selectedServices = [];
+                if (formData.inbrottslarm) selectedServices.push('Inbrottslarm/Överfallslarm/Driftslarm');
+                if (formData.grundservice) selectedServices.push('Grundservice');
+                if (formData.larmformedling) selectedServices.push('Larmförmedling');
+                if (formData.cctv) selectedServices.push('CCTV');
+                if (formData.brandlarm) selectedServices.push('Brandlarm');
+                
+                return (
+                    <div className="animate-in space-y-6">
+                        <div className="bg-gradient-to-br from-sky-500 to-sky-600 text-white p-8 rounded-2xl">
+                            <h2 className="text-3xl font-bold mb-2">Avtalet är klart!</h2>
+                            <p className="text-sky-100">Granska informationen nedan innan du slutför</p>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-xl border border-gray-200">
+                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Kundinformation</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div><strong>Kundnamn:</strong> {formData.kundnamn}</div>
+                                <div><strong>Org.nr:</strong> {formData.orgnr}</div>
+                                <div><strong>Objektnamn:</strong> {formData.objektnamn}</div>
+                                <div><strong>Telefon:</strong> {formData.telefon}</div>
+                                <div className="md:col-span-2"><strong>Adress:</strong> {formData.objektadress}, {formData.postnummer} {formData.postort}</div>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-xl border border-gray-200">
+                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Avtalsinformation</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div><strong>Avtalsstart:</strong> {formData.avtalsstart}</div>
+                                <div><strong>Avtalsperiod:</strong> {formData.avtalsperiod} månader</div>
+                                <div><strong>Betalning:</strong> {formData.betalningsvillkor}</div>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-xl border border-gray-200">
+                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Valda tjänster</h3>
+                            {selectedServices.length > 0 ? (
+                                <ul className="space-y-2">
+                                    {selectedServices.map((service, idx) => (
+                                        <li key={idx} className="flex items-center text-sm">
+                                            <span className="text-green-500 mr-2">✓</span>
+                                            {service}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-500 text-sm">Inga tjänster valda</p>
+                            )}
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-xl border border-gray-200">
+                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Underskrifter</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-2">Säljare</p>
+                                    <p className="text-sm mb-2">{formData.saljarNamn}</p>
+                                    {formData.saljarSignatur && (
+                                        <img src={formData.saljarSignatur} alt="Säljarsignatur" className="border rounded max-h-24" />
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">{formData.saljarDatum}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-2">Kund</p>
+                                    <p className="text-sm mb-2">{formData.kundNamn}</p>
+                                    {formData.kundSignatur && (
+                                        <img src={formData.kundSignatur} alt="Kundsignatur" className="border rounded max-h-24" />
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">{formData.kundDatum}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-4">
+                            <button
+                                onClick={exportToPDF}
+                                className="btn-primary flex-1 px-8 py-4 rounded-xl text-white font-semibold text-lg shadow-lg"
+                            >
+                                📄 Exportera till PDF
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (confirm('Är du säker på att du vill rensa alla uppgifter?')) {
+                                        localStorage.removeItem('tjansteavtal-draft');
+                                        window.location.reload();
+                                    }
+                                }}
+                                className="px-8 py-4 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50"
+                            >
+                                🗑️ Rensa
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const exportToPDF = () => {
+                alert('PDF-export funktion kommer att implementeras. Detta skulle kräva ett bibliotek som jsPDF eller ett backend API-anrop för att generera professionell PDF.');
+            };
+
+            const renderStep = () => {
+                switch(currentStep) {
+                    case 0: return renderKundinformation();
+                    case 1: return renderAvtalsinformation();
+                    case 2: return renderTjanster();
+                    case 3: return renderUnderskrifter();
+                    case 4: return renderGranska();
+                    default: return null;
+                }
+            };
+
+            return (
+                <div className="min-h-screen py-8 px-4">
+                    <div className="max-w-4xl mx-auto">
+                        {/* Header */}
+                        <div className="text-center mb-8">
+                            <h1 className="brand-title text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+                                Wasa Larm
+                            </h1>
+                            <p className="text-gray-600">Digitalt Tjänsteavtal</p>
+                        </div>
+                        
+                        {/* Progress Steps */}
+                        <div className="mb-8 bg-white rounded-2xl p-6 shadow-sm">
+                            <div className="flex justify-between items-center">
+                                {steps.map((step, idx) => (
+                                    <div key={idx} className="flex-1 flex flex-col items-center">
+                                        <div className={`step-indicator ${
+                                            idx === currentStep ? 'active' : 
+                                            idx < currentStep ? 'completed' : 'inactive'
+                                        }`}>
+                                            {idx < currentStep ? '✓' : step.icon}
+                                        </div>
+                                        <p className="text-xs md:text-sm mt-2 text-center font-medium text-gray-600">
+                                            {step.title}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg mb-6">
+                            {renderStep()}
+                        </div>
+                        
+                        {/* Navigation */}
+                        <div className="flex gap-4">
+                            {currentStep > 0 && (
+                                <button
+                                    onClick={() => setCurrentStep(currentStep - 1)}
+                                    className="px-8 py-4 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition"
+                                >
+                                    ← Tillbaka
+                                </button>
+                            )}
+                            {currentStep < steps.length - 1 && (
+                                <button
+                                    onClick={() => setCurrentStep(currentStep + 1)}
+                                    className="btn-primary flex-1 px-8 py-4 rounded-xl text-white font-semibold shadow-lg"
+                                >
+                                    Nästa →
+                                </button>
+                            )}
+                        </div>
+                        
+                        {/* Auto-save indicator */}
+                        <p className="text-center text-sm text-gray-500 mt-4">
+                            💾 Dina ändringar sparas automatiskt
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<TjansteavtalApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
