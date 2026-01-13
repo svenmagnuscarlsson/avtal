@@ -7,11 +7,13 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@300;400;500;600&display=swap');
         
         * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
         
@@ -19,50 +21,72 @@
             font-family: 'Work Sans', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e8edf2 100%);
             min-height: 100vh;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
         }
         
         .brand-title {
             font-family: 'Playfair Display', serif;
             letter-spacing: -0.02em;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            text-align: center;
         }
         
-        .signature-canvas {
-            border: 2px dashed #cbd5e1;
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
             background: white;
-            border-radius: 12px;
-            touch-action: none;
-            cursor: crosshair;
-            transition: all 0.3s ease;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
         }
         
-        .signature-canvas:hover {
-            border-color: #0ea5e9;
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        .progress-container {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
         }
         
-        .checkbox-card {
-            transition: all 0.2s ease;
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
         }
         
-        .checkbox-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-        
-        .checkbox-card.selected {
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-            color: white;
-            border-color: #0284c7;
+        .step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .step-indicator {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
+            font-size: 1.25rem;
             transition: all 0.3s ease;
         }
         
@@ -70,6 +94,7 @@
             background: #0ea5e9;
             color: white;
             transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
         
         .step-indicator.completed {
@@ -82,13 +107,368 @@
             color: #64748b;
         }
         
-        .input-field {
-            transition: all 0.2s ease;
+        .step-title {
+            font-size: 0.875rem;
+            text-align: center;
+            font-weight: 500;
+            color: #64748b;
         }
         
-        .input-field:focus {
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .brand-title {
+                font-size: 3.5rem;
+            }
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #d1d5db;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        }
+        
+        .info-box {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            border: 2px solid;
+        }
+        
+        .info-box.sky {
+            background: #f0f9ff;
+            border-color: #bae6fd;
+            color: #0c4a6e;
+        }
+        
+        .info-box.amber {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #78350f;
+        }
+        
+        .payment-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+        
+        @media (min-width: 768px) {
+            .payment-options {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .payment-option {
+            padding: 1rem 1.5rem;
+            border: 2px solid #d1d5db;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            background: white;
+        }
+        
+        .payment-option:hover {
+            border-color: #0ea5e9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .payment-option.selected {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            border-color: #0284c7;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+        
+        .service-card {
+            padding: 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 0.75rem;
+            background: white;
+        }
+        
+        .service-card:hover {
+            border-color: #0ea5e9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+        
+        .service-card.selected {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            border-color: #0284c7;
+        }
+        
+        .service-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid #d1d5db;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .service-card.selected .checkbox {
+            background: white;
+            border-color: white;
+        }
+        
+        .checkbox-check {
+            color: #0ea5e9;
+            font-weight: bold;
+            font-size: 1.125rem;
+        }
+        
+        .service-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .service-description {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .signature-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 2px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+        
+        .signature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+        
+        .signature-canvas {
+            border: 2px dashed #cbd5e1;
+            background: white;
+            border-radius: 0.75rem;
+            touch-action: none;
+            cursor: crosshair;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: block;
+        }
+        
+        .signature-canvas:hover {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 2px solid #d1d5db;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        
+        .btn-text {
+            background: transparent;
+            color: #0ea5e9;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-text:hover {
+            color: #0284c7;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .nav-buttons .btn {
+            flex: 1;
+        }
+        
+        .nav-buttons .btn-secondary {
+            flex: none;
+            padding: 1rem 1.5rem;
+        }
+        
+        .save-indicator {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+        
+        .review-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .review-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .review-item {
+            margin-bottom: 0.75rem;
+        }
+        
+        .review-label {
+            font-weight: 600;
+            display: inline;
+        }
+        
+        .success-header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .success-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .success-subtitle {
+            opacity: 0.9;
+        }
+        
+        .service-list {
+            list-style: none;
+        }
+        
+        .service-list-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .check-icon {
+            color: #10b981;
+        }
+        
+        .signature-preview {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            max-height: 100px;
+            margin-top: 0.5rem;
+        }
+        
+        .review-signature-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .review-signature-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .export-buttons .btn {
+            flex: 1;
+            min-width: 200px;
         }
         
         @keyframes slideIn {
@@ -106,18 +486,24 @@
             animation: slideIn 0.4s ease-out;
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(14, 165, 233, 0.3);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
+        @media (max-width: 640px) {
+            .brand-title {
+                font-size: 2rem;
+            }
+            
+            .step-title {
+                font-size: 0.75rem;
+            }
+            
+            .step-indicator {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -130,7 +516,6 @@
         const TjansteavtalApp = () => {
             const [currentStep, setCurrentStep] = useState(0);
             const [formData, setFormData] = useState({
-                // Kundinformation
                 objektsnummer: '222590-1',
                 kundnamn: '',
                 kundnr: '222590',
@@ -144,13 +529,9 @@
                 kontaktperson: '',
                 telefonKontakt: '',
                 email: '',
-                
-                // Avtal
                 avtalsstart: '',
                 avtalsperiod: '24',
                 betalningsvillkor: 'kvartalsvis',
-                
-                // Tjänster
                 inbrottslarm: false,
                 grundservice: false,
                 larmformedling: false,
@@ -158,16 +539,12 @@
                 larmsandare: false,
                 utokadGaranti36: false,
                 hyresavtal: false,
-                
                 cctv: false,
                 cctvGrundservice: false,
                 mobildata: false,
                 cctvGaranti: false,
-                
                 firePreventionKomplett: false,
                 brandlarm: false,
-                
-                // Underskrifter
                 saljarSignatur: null,
                 kundSignatur: null,
                 saljarNamn: '',
@@ -181,7 +558,6 @@
             const [isSaljarDrawing, setIsSaljarDrawing] = useState(false);
             const [isKundDrawing, setIsKundDrawing] = useState(false);
 
-            // Auto-save to localStorage
             useEffect(() => {
                 const saved = localStorage.getItem('tjansteavtal-draft');
                 if (saved) {
@@ -205,7 +581,6 @@
                 { title: 'Granska', icon: '✓' }
             ];
 
-            // Signature functions
             const startDrawing = (e, canvas, setDrawing) => {
                 setDrawing(true);
                 const ctx = canvas.getContext('2d');
@@ -242,118 +617,118 @@
             };
 
             const renderKundinformation = () => (
-                <div className="animate-in space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Kundnamn *</label>
+                <div className="animate-in">
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Kundnamn *</label>
                             <input
                                 type="text"
                                 value={formData.kundnamn}
                                 onChange={(e) => updateField('kundnamn', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="T.ex. Gårdstensbostäder AB"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Organisationsnummer *</label>
+                        <div className="form-group">
+                            <label className="form-label">Organisationsnummer *</label>
                             <input
                                 type="text"
                                 value={formData.orgnr}
                                 onChange={(e) => updateField('orgnr', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="XXXXXX-XXXX"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Objektnamn *</label>
+                        <div className="form-group">
+                            <label className="form-label">Objektnamn *</label>
                             <input
                                 type="text"
                                 value={formData.objektnamn}
                                 onChange={(e) => updateField('objektnamn', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="Objektets namn"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Telefon *</label>
+                        <div className="form-group">
+                            <label className="form-label">Telefon *</label>
                             <input
                                 type="tel"
                                 value={formData.telefon}
                                 onChange={(e) => updateField('telefon', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="031-XXX XX XX"
                             />
                         </div>
                     </div>
                     
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Objektadress *</label>
+                    <div className="form-group">
+                        <label className="form-label">Objektadress *</label>
                         <input
                             type="text"
                             value={formData.objektadress}
                             onChange={(e) => updateField('objektadress', e.target.value)}
-                            className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            className="form-input"
                             placeholder="Gatuadress"
                         />
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Postnummer</label>
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Postnummer</label>
                             <input
                                 type="text"
                                 value={formData.postnummer}
                                 onChange={(e) => updateField('postnummer', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="XXX XX"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Postort</label>
+                        <div className="form-group">
+                            <label className="form-label">Postort</label>
                             <input
                                 type="text"
                                 value={formData.postort}
                                 onChange={(e) => updateField('postort', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="T.ex. Göteborg"
                             />
                         </div>
                     </div>
                     
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Kontaktperson</label>
+                    <div className="form-group">
+                        <label className="form-label">Kontaktperson</label>
                         <input
                             type="text"
                             value={formData.kontaktperson}
                             onChange={(e) => updateField('kontaktperson', e.target.value)}
-                            className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            className="form-input"
                             placeholder="Namn på kontaktperson"
                         />
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Telefon kontaktperson</label>
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Telefon kontaktperson</label>
                             <input
                                 type="tel"
                                 value={formData.telefonKontakt}
                                 onChange={(e) => updateField('telefonKontakt', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="07X-XXX XX XX"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">E-postadress</label>
+                        <div className="form-group">
+                            <label className="form-label">E-postadress</label>
                             <input
                                 type="email"
                                 value={formData.email}
                                 onChange={(e) => updateField('email', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="exempel@företag.se"
                             />
                         </div>
@@ -362,24 +737,24 @@
             );
 
             const renderAvtalsinformation = () => (
-                <div className="animate-in space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Avtalsstart *</label>
+                <div className="animate-in">
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Avtalsstart *</label>
                             <input
                                 type="date"
                                 value={formData.avtalsstart}
                                 onChange={(e) => updateField('avtalsstart', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Avtalsperiod (månader) *</label>
+                        <div className="form-group">
+                            <label className="form-label">Avtalsperiod (månader) *</label>
                             <select
                                 value={formData.avtalsperiod}
                                 onChange={(e) => updateField('avtalsperiod', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-select"
                             >
                                 <option value="12">12 månader</option>
                                 <option value="24">24 månader</option>
@@ -389,19 +764,15 @@
                         </div>
                     </div>
                     
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">Betalningsvillkor *</label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="form-group">
+                        <label className="form-label">Betalningsvillkor *</label>
+                        <div className="payment-options">
                             {['kvartalsvis', 'halvårsvis', 'årsvis'].map(option => (
                                 <button
                                     key={option}
                                     type="button"
                                     onClick={() => updateField('betalningsvillkor', option)}
-                                    className={`checkbox-card px-6 py-4 border-2 rounded-lg font-medium ${
-                                        formData.betalningsvillkor === option 
-                                            ? 'selected' 
-                                            : 'border-gray-300 bg-white hover:border-sky-400'
-                                    }`}
+                                    className={`payment-option ${formData.betalningsvillkor === option ? 'selected' : ''}`}
                                 >
                                     {option.charAt(0).toUpperCase() + option.slice(1)}
                                 </button>
@@ -409,10 +780,8 @@
                         </div>
                     </div>
                     
-                    <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-                        <p className="text-sm text-sky-900">
-                            <strong>Viktigt:</strong> Om inte avtalet sägs upp tre (3) månader innan avtalstidens utgång förlängs avtalstiden med tolv (12) månader.
-                        </p>
+                    <div className="info-box sky">
+                        <strong>Viktigt:</strong> Om inte avtalet sägs upp tre (3) månader innan avtalstidens utgång förlängs avtalstiden med tolv (12) månader.
                     </div>
                 </div>
             );
@@ -420,187 +789,172 @@
             const ServiceCard = ({ title, checked, onChange, children }) => (
                 <div
                     onClick={() => onChange(!checked)}
-                    className={`checkbox-card cursor-pointer p-5 border-2 rounded-xl ${
-                        checked 
-                            ? 'selected' 
-                            : 'border-gray-200 bg-white hover:border-sky-300'
-                    }`}
+                    className={`service-card ${checked ? 'selected' : ''}`}
                 >
-                    <div className="flex items-start">
-                        <div className={`w-6 h-6 rounded-md mr-4 flex-shrink-0 flex items-center justify-center border-2 ${
-                            checked 
-                                ? 'bg-white border-white' 
-                                : 'border-gray-300 bg-white'
-                        }`}>
-                            {checked && <span className="text-sky-500 font-bold">✓</span>}
+                    <div className="service-header">
+                        <div className="checkbox">
+                            {checked && <span className="checkbox-check">✓</span>}
                         </div>
-                        <div className="flex-1">
-                            <h4 className="font-semibold text-lg mb-2">{title}</h4>
-                            {children}
+                        <div style={{ flex: 1 }}>
+                            <div className="service-title">{title}</div>
+                            <div className="service-description">{children}</div>
                         </div>
                     </div>
                 </div>
             );
 
             const renderTjanster = () => (
-                <div className="animate-in space-y-6">
-                    <div>
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Inbrottslarm & Övervakning</h3>
-                        <div className="space-y-3">
-                            <ServiceCard 
-                                title="Inbrottslarm/Överfallslarm/Driftslarm"
-                                checked={formData.inbrottslarm}
-                                onChange={(val) => updateField('inbrottslarm', val)}
-                            >
-                                <p className="text-sm opacity-90">Grundläggande larmfunktionalitet</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Grundservice enligt kontrollpunkter"
-                                checked={formData.grundservice}
-                                onChange={(val) => updateField('grundservice', val)}
-                            >
-                                <p className="text-sm opacity-90">Regelbunden service och underhåll</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Larmförmedling till certifierad larmcentral"
-                                checked={formData.larmformedling}
-                                onChange={(val) => updateField('larmformedling', val)}
-                            >
-                                <p className="text-sm opacity-90">Förmedling till max 3 kontaktpersoner, nyckelförvaring och utryckningsberedskap</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Fria väktarutryckningar"
-                                checked={formData.friaVaktarutryckningar}
-                                onChange={(val) => updateField('friaVaktarutryckningar', val)}
-                            >
-                                <p className="text-sm opacity-90">Se särskilda avtalsvillkor</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Abonnemang för larmsändare"
-                                checked={formData.larmsandare}
-                                onChange={(val) => updateField('larmsandare', val)}
-                            >
-                                <p className="text-sm opacity-90">Med övervakad kommunikation</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Utökad garanti 36 månader"
-                                checked={formData.utokadGaranti36}
-                                onChange={(val) => updateField('utokadGaranti36', val)}
-                            >
-                                <p className="text-sm opacity-90">Vid nyinstallation</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Hyresavtal"
-                                checked={formData.hyresavtal}
-                                onChange={(val) => updateField('hyresavtal', val)}
-                            >
-                                <p className="text-sm opacity-90">Larmequipment ingår i hyra</p>
-                            </ServiceCard>
-                        </div>
+                <div className="animate-in">
+                    <div style={{ marginBottom: '2rem' }}>
+                        <h3 className="section-title">Inbrottslarm & Övervakning</h3>
+                        <ServiceCard 
+                            title="Inbrottslarm/Överfallslarm/Driftslarm"
+                            checked={formData.inbrottslarm}
+                            onChange={(val) => updateField('inbrottslarm', val)}
+                        >
+                            Grundläggande larmfunktionalitet
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Grundservice enligt kontrollpunkter"
+                            checked={formData.grundservice}
+                            onChange={(val) => updateField('grundservice', val)}
+                        >
+                            Regelbunden service och underhåll
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Larmförmedling till certifierad larmcentral"
+                            checked={formData.larmformedling}
+                            onChange={(val) => updateField('larmformedling', val)}
+                        >
+                            Förmedling till max 3 kontaktpersoner, nyckelförvaring och utryckningsberedskap
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Fria väktarutryckningar"
+                            checked={formData.friaVaktarutryckningar}
+                            onChange={(val) => updateField('friaVaktarutryckningar', val)}
+                        >
+                            Se särskilda avtalsvillkor
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Abonnemang för larmsändare"
+                            checked={formData.larmsandare}
+                            onChange={(val) => updateField('larmsandare', val)}
+                        >
+                            Med övervakad kommunikation
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Utökad garanti 36 månader"
+                            checked={formData.utokadGaranti36}
+                            onChange={(val) => updateField('utokadGaranti36', val)}
+                        >
+                            Vid nyinstallation
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Hyresavtal"
+                            checked={formData.hyresavtal}
+                            onChange={(val) => updateField('hyresavtal', val)}
+                        >
+                            Larmequipment ingår i hyra
+                        </ServiceCard>
+                    </div>
+                    
+                    <div style={{ marginBottom: '2rem' }}>
+                        <h3 className="section-title">CCTV - Videoövervakning</h3>
+                        <ServiceCard 
+                            title="CCTV System"
+                            checked={formData.cctv}
+                            onChange={(val) => updateField('cctv', val)}
+                        >
+                            Kamerasystem för videoövervakning
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Grundservice för CCTV"
+                            checked={formData.cctvGrundservice}
+                            onChange={(val) => updateField('cctvGrundservice', val)}
+                        >
+                            Regelbunden service enligt kontrollpunkter
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Abonnemang mobildata 3G/4G"
+                            checked={formData.mobildata}
+                            onChange={(val) => updateField('mobildata', val)}
+                        >
+                            För fjärrövervakning via mobilt nätverk
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Utökad garanti CCTV"
+                            checked={formData.cctvGaranti}
+                            onChange={(val) => updateField('cctvGaranti', val)}
+                        >
+                            36 månaders garanti vid nyinstallation
+                        </ServiceCard>
                     </div>
                     
                     <div>
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800">CCTV - Videoövervakning</h3>
-                        <div className="space-y-3">
-                            <ServiceCard 
-                                title="CCTV System"
-                                checked={formData.cctv}
-                                onChange={(val) => updateField('cctv', val)}
-                            >
-                                <p className="text-sm opacity-90">Kamerasystem för videoövervakning</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Grundservice för CCTV"
-                                checked={formData.cctvGrundservice}
-                                onChange={(val) => updateField('cctvGrundservice', val)}
-                            >
-                                <p className="text-sm opacity-90">Regelbunden service enligt kontrollpunkter</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Abonnemang mobildata 3G/4G"
-                                checked={formData.mobildata}
-                                onChange={(val) => updateField('mobildata', val)}
-                            >
-                                <p className="text-sm opacity-90">För fjärrövervakning via mobilt nätverk</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Utökad garanti CCTV"
-                                checked={formData.cctvGaranti}
-                                onChange={(val) => updateField('cctvGaranti', val)}
-                            >
-                                <p className="text-sm opacity-90">36 månaders garanti vid nyinstallation</p>
-                            </ServiceCard>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Brandskydd</h3>
-                        <div className="space-y-3">
-                            <ServiceCard 
-                                title="Fire Prevention Komplett"
-                                checked={formData.firePreventionKomplett}
-                                onChange={(val) => updateField('firePreventionKomplett', val)}
-                            >
-                                <p className="text-sm opacity-90">Omfattande brandskyddslösning</p>
-                            </ServiceCard>
-                            
-                            <ServiceCard 
-                                title="Brandlarm"
-                                checked={formData.brandlarm}
-                                onChange={(val) => updateField('brandlarm', val)}
-                            >
-                                <p className="text-sm opacity-90">Brandlarm enligt SBF110</p>
-                            </ServiceCard>
-                        </div>
+                        <h3 className="section-title">Brandskydd</h3>
+                        <ServiceCard 
+                            title="Fire Prevention Komplett"
+                            checked={formData.firePreventionKomplett}
+                            onChange={(val) => updateField('firePreventionKomplett', val)}
+                        >
+                            Omfattande brandskyddslösning
+                        </ServiceCard>
+                        
+                        <ServiceCard 
+                            title="Brandlarm"
+                            checked={formData.brandlarm}
+                            onChange={(val) => updateField('brandlarm', val)}
+                        >
+                            Brandlarm enligt SBF110
+                        </ServiceCard>
                     </div>
                 </div>
             );
 
             const renderUnderskrifter = () => (
-                <div className="animate-in space-y-8">
-                    {/* Säljare */}
-                    <div className="bg-white p-6 rounded-xl border-2 border-gray-200">
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Säljare (Wasa Larm AB)</h3>
+                <div className="animate-in">
+                    <div className="signature-section">
+                        <h3 className="signature-title">Säljare (Wasa Larm AB)</h3>
                         
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Namn *</label>
+                        <div className="form-group">
+                            <label className="form-label">Namn *</label>
                             <input
                                 type="text"
                                 value={formData.saljarNamn}
                                 onChange={(e) => updateField('saljarNamn', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="Fyll i ditt namn"
                             />
                         </div>
                         
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Datum *</label>
+                        <div className="form-group">
+                            <label className="form-label">Datum *</label>
                             <input
                                 type="date"
                                 value={formData.saljarDatum}
                                 onChange={(e) => updateField('saljarDatum', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Signatur * <span className="text-gray-500 text-xs">(Rita med finger/penna)</span>
+                        <div className="form-group">
+                            <label className="form-label">
+                                Signatur * <span style={{ color: '#64748b', fontSize: '0.75rem' }}>(Rita med finger/penna)</span>
                             </label>
                             <canvas
                                 ref={saljarCanvasRef}
                                 width={600}
                                 height={200}
-                                className="signature-canvas w-full"
+                                className="signature-canvas"
                                 onMouseDown={(e) => startDrawing(e, saljarCanvasRef.current, setIsSaljarDrawing)}
                                 onMouseMove={(e) => draw(e, saljarCanvasRef.current, isSaljarDrawing)}
                                 onMouseUp={() => stopDrawing(saljarCanvasRef.current, 'saljarSignatur', setIsSaljarDrawing)}
@@ -612,47 +966,46 @@
                             <button
                                 type="button"
                                 onClick={() => clearSignature(saljarCanvasRef.current, 'saljarSignatur')}
-                                className="mt-2 text-sm text-sky-600 hover:text-sky-700 font-medium"
+                                className="btn btn-text"
                             >
                                 Rensa signatur
                             </button>
                         </div>
                     </div>
                     
-                    {/* Kund */}
-                    <div className="bg-white p-6 rounded-xl border-2 border-gray-200">
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800">Kund</h3>
+                    <div className="signature-section">
+                        <h3 className="signature-title">Kund</h3>
                         
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Namn *</label>
+                        <div className="form-group">
+                            <label className="form-label">Namn *</label>
                             <input
                                 type="text"
                                 value={formData.kundNamn}
                                 onChange={(e) => updateField('kundNamn', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                                 placeholder="Kundens namn"
                             />
                         </div>
                         
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Datum *</label>
+                        <div className="form-group">
+                            <label className="form-label">Datum *</label>
                             <input
                                 type="date"
                                 value={formData.kundDatum}
                                 onChange={(e) => updateField('kundDatum', e.target.value)}
-                                className="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                className="form-input"
                             />
                         </div>
                         
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Signatur * <span className="text-gray-500 text-xs">(Rita med finger/penna)</span>
+                        <div className="form-group">
+                            <label className="form-label">
+                                Signatur * <span style={{ color: '#64748b', fontSize: '0.75rem' }}>(Rita med finger/penna)</span>
                             </label>
                             <canvas
                                 ref={kundCanvasRef}
                                 width={600}
                                 height={200}
-                                className="signature-canvas w-full"
+                                className="signature-canvas"
                                 onMouseDown={(e) => startDrawing(e, kundCanvasRef.current, setIsKundDrawing)}
                                 onMouseMove={(e) => draw(e, kundCanvasRef.current, isKundDrawing)}
                                 onMouseUp={() => stopDrawing(kundCanvasRef.current, 'kundSignatur', setIsKundDrawing)}
@@ -664,17 +1017,15 @@
                             <button
                                 type="button"
                                 onClick={() => clearSignature(kundCanvasRef.current, 'kundSignatur')}
-                                className="mt-2 text-sm text-sky-600 hover:text-sky-700 font-medium"
+                                className="btn btn-text"
                             >
                                 Rensa signatur
                             </button>
                         </div>
                     </div>
                     
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                        <p className="text-sm text-amber-900">
-                            <strong>OBS:</strong> Genom att signera accepterar ni Wasa Larms Allmänna bestämmelser samt Särskilda bestämmelser för köp, installation och service av tekniskt säkerhetssystem.
-                        </p>
+                    <div className="info-box amber">
+                        <strong>OBS:</strong> Genom att signera accepterar ni Wasa Larms Allmänna bestämmelser samt Särskilda bestämmelser för köp, installation och service av tekniskt säkerhetssystem.
                     </div>
                 </div>
             );
@@ -688,74 +1039,90 @@
                 if (formData.brandlarm) selectedServices.push('Brandlarm');
                 
                 return (
-                    <div className="animate-in space-y-6">
-                        <div className="bg-gradient-to-br from-sky-500 to-sky-600 text-white p-8 rounded-2xl">
-                            <h2 className="text-3xl font-bold mb-2">Avtalet är klart!</h2>
-                            <p className="text-sky-100">Granska informationen nedan innan du slutför</p>
+                    <div className="animate-in">
+                        <div className="success-header">
+                            <h2 className="success-title">Avtalet är klart!</h2>
+                            <p className="success-subtitle">Granska informationen nedan innan du slutför</p>
                         </div>
                         
-                        <div className="bg-white p-6 rounded-xl border border-gray-200">
-                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Kundinformation</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div><strong>Kundnamn:</strong> {formData.kundnamn}</div>
-                                <div><strong>Org.nr:</strong> {formData.orgnr}</div>
-                                <div><strong>Objektnamn:</strong> {formData.objektnamn}</div>
-                                <div><strong>Telefon:</strong> {formData.telefon}</div>
-                                <div className="md:col-span-2"><strong>Adress:</strong> {formData.objektadress}, {formData.postnummer} {formData.postort}</div>
+                        <div className="card">
+                            <h3 className="section-title">Kundinformation</h3>
+                            <div className="review-grid">
+                                <div className="review-item">
+                                    <span className="review-label">Kundnamn:</span> {formData.kundnamn}
+                                </div>
+                                <div className="review-item">
+                                    <span className="review-label">Org.nr:</span> {formData.orgnr}
+                                </div>
+                                <div className="review-item">
+                                    <span className="review-label">Objektnamn:</span> {formData.objektnamn}
+                                </div>
+                                <div className="review-item">
+                                    <span className="review-label">Telefon:</span> {formData.telefon}
+                                </div>
+                                <div className="review-item" style={{ gridColumn: '1 / -1' }}>
+                                    <span className="review-label">Adress:</span> {formData.objektadress}, {formData.postnummer} {formData.postort}
+                                </div>
                             </div>
                         </div>
                         
-                        <div className="bg-white p-6 rounded-xl border border-gray-200">
-                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Avtalsinformation</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div><strong>Avtalsstart:</strong> {formData.avtalsstart}</div>
-                                <div><strong>Avtalsperiod:</strong> {formData.avtalsperiod} månader</div>
-                                <div><strong>Betalning:</strong> {formData.betalningsvillkor}</div>
+                        <div className="card">
+                            <h3 className="section-title">Avtalsinformation</h3>
+                            <div className="review-grid">
+                                <div className="review-item">
+                                    <span className="review-label">Avtalsstart:</span> {formData.avtalsstart}
+                                </div>
+                                <div className="review-item">
+                                    <span className="review-label">Avtalsperiod:</span> {formData.avtalsperiod} månader
+                                </div>
+                                <div className="review-item">
+                                    <span className="review-label">Betalning:</span> {formData.betalningsvillkor}
+                                </div>
                             </div>
                         </div>
                         
-                        <div className="bg-white p-6 rounded-xl border border-gray-200">
-                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Valda tjänster</h3>
+                        <div className="card">
+                            <h3 className="section-title">Valda tjänster</h3>
                             {selectedServices.length > 0 ? (
-                                <ul className="space-y-2">
+                                <ul className="service-list">
                                     {selectedServices.map((service, idx) => (
-                                        <li key={idx} className="flex items-center text-sm">
-                                            <span className="text-green-500 mr-2">✓</span>
+                                        <li key={idx} className="service-list-item">
+                                            <span className="check-icon">✓</span>
                                             {service}
                                         </li>
                                     ))}
                                 </ul>
                             ) : (
-                                <p className="text-gray-500 text-sm">Inga tjänster valda</p>
+                                <p style={{ color: '#64748b', fontSize: '0.875rem' }}>Inga tjänster valda</p>
                             )}
                         </div>
                         
-                        <div className="bg-white p-6 rounded-xl border border-gray-200">
-                            <h3 className="text-lg font-semibold mb-4 text-gray-800">Underskrifter</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="card">
+                            <h3 className="section-title">Underskrifter</h3>
+                            <div className="review-signature-grid">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Säljare</p>
-                                    <p className="text-sm mb-2">{formData.saljarNamn}</p>
+                                    <p style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Säljare</p>
+                                    <p style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>{formData.saljarNamn}</p>
                                     {formData.saljarSignatur && (
-                                        <img src={formData.saljarSignatur} alt="Säljarsignatur" className="border rounded max-h-24" />
+                                        <img src={formData.saljarSignatur} alt="Säljarsignatur" className="signature-preview" />
                                     )}
-                                    <p className="text-xs text-gray-500 mt-1">{formData.saljarDatum}</p>
+                                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>{formData.saljarDatum}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Kund</p>
-                                    <p className="text-sm mb-2">{formData.kundNamn}</p>
+                                    <p style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Kund</p>
+                                    <p style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>{formData.kundNamn}</p>
                                     {formData.kundSignatur && (
-                                        <img src={formData.kundSignatur} alt="Kundsignatur" className="border rounded max-h-24" />
+                                        <img src={formData.kundSignatur} alt="Kundsignatur" className="signature-preview" />
                                     )}
-                                    <p className="text-xs text-gray-500 mt-1">{formData.kundDatum}</p>
+                                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>{formData.kundDatum}</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <div className="flex gap-4">
+                        <div className="export-buttons">
                             <button
                                 onClick={exportToPDF}
-                                className="btn-primary flex-1 px-8 py-4 rounded-xl text-white font-semibold text-lg shadow-lg"
+                                className="btn btn-primary"
                             >
                                 📄 Exportera till PDF
                             </button>
@@ -766,7 +1133,7 @@
                                         window.location.reload();
                                     }
                                 }}
-                                className="px-8 py-4 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50"
+                                className="btn btn-secondary"
                             >
                                 🗑️ Rensa
                             </button>
@@ -776,7 +1143,7 @@
             };
 
             const exportToPDF = () => {
-                alert('PDF-export funktion kommer att implementeras. Detta skulle kräva ett bibliotek som jsPDF eller ett backend API-anrop för att generera professionell PDF.');
+                alert('PDF-export funktion kommer att implementeras med jsPDF eller server-side API.');
             };
 
             const renderStep = () => {
@@ -791,65 +1158,52 @@
             };
 
             return (
-                <div className="min-h-screen py-8 px-4">
-                    <div className="max-w-4xl mx-auto">
-                        {/* Header */}
-                        <div className="text-center mb-8">
-                            <h1 className="brand-title text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                                Wasa Larm
-                            </h1>
-                            <p className="text-gray-600">Digitalt Tjänsteavtal</p>
-                        </div>
-                        
-                        {/* Progress Steps */}
-                        <div className="mb-8 bg-white rounded-2xl p-6 shadow-sm">
-                            <div className="flex justify-between items-center">
-                                {steps.map((step, idx) => (
-                                    <div key={idx} className="flex-1 flex flex-col items-center">
-                                        <div className={`step-indicator ${
-                                            idx === currentStep ? 'active' : 
-                                            idx < currentStep ? 'completed' : 'inactive'
-                                        }`}>
-                                            {idx < currentStep ? '✓' : step.icon}
-                                        </div>
-                                        <p className="text-xs md:text-sm mt-2 text-center font-medium text-gray-600">
-                                            {step.title}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg mb-6">
-                            {renderStep()}
-                        </div>
-                        
-                        {/* Navigation */}
-                        <div className="flex gap-4">
-                            {currentStep > 0 && (
-                                <button
-                                    onClick={() => setCurrentStep(currentStep - 1)}
-                                    className="px-8 py-4 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition"
-                                >
-                                    ← Tillbaka
-                                </button>
-                            )}
-                            {currentStep < steps.length - 1 && (
-                                <button
-                                    onClick={() => setCurrentStep(currentStep + 1)}
-                                    className="btn-primary flex-1 px-8 py-4 rounded-xl text-white font-semibold shadow-lg"
-                                >
-                                    Nästa →
-                                </button>
-                            )}
-                        </div>
-                        
-                        {/* Auto-save indicator */}
-                        <p className="text-center text-sm text-gray-500 mt-4">
-                            💾 Dina ändringar sparas automatiskt
-                        </p>
+                <div className="container">
+                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <h1 className="brand-title">Wasa Larm</h1>
+                        <p className="subtitle">Digitalt Tjänsteavtal</p>
                     </div>
+                    
+                    <div className="progress-container">
+                        <div className="steps">
+                            {steps.map((step, idx) => (
+                                <div key={idx} className="step">
+                                    <div className={`step-indicator ${
+                                        idx === currentStep ? 'active' : 
+                                        idx < currentStep ? 'completed' : 'inactive'
+                                    }`}>
+                                        {idx < currentStep ? '✓' : step.icon}
+                                    </div>
+                                    <p className="step-title">{step.title}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="card">
+                        {renderStep()}
+                    </div>
+                    
+                    <div className="nav-buttons">
+                        {currentStep > 0 && (
+                            <button
+                                onClick={() => setCurrentStep(currentStep - 1)}
+                                className="btn btn-secondary"
+                            >
+                                ← Tillbaka
+                            </button>
+                        )}
+                        {currentStep < steps.length - 1 && (
+                            <button
+                                onClick={() => setCurrentStep(currentStep + 1)}
+                                className="btn btn-primary"
+                            >
+                                Nästa →
+                            </button>
+                        )}
+                    </div>
+                    
+                    <p className="save-indicator">💾 Dina ändringar sparas automatiskt</p>
                 </div>
             );
         };
